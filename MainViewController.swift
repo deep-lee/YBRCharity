@@ -38,12 +38,7 @@ class MainViewController: UIViewController {
 	// 登录弹出视图
 	var popup: AFPopupView!
 
-	let menuBtn: CircleMenu = {
-		let btn = CircleMenu(frame: CGRectMake(0, 0, 60, 60), normalIcon: "icon-menu", selectedIcon: "icon-close", buttonsCount: 2, duration: 0.5, distance: 120)
-		btn.translatesAutoresizingMaskIntoConstraints = false
-
-		return btn
-	}()
+	var menuBtn: CircleMenu!
 
 	let items: [(icon: String, color: UIColor)] = [
 		("icon-home", UIColor(red: 0.19, green: 0.57, blue: 1, alpha: 1)),
@@ -96,27 +91,37 @@ class MainViewController: UIViewController {
 		self.profileViewController.view.frame = self.view.bounds
 		self.profileViewController.delegate = self
 
-		view.addSubview(menuBtn)
+		let button = CircleMenu(
+			frame: CGRect(x: UIScreen.mainScreen().bounds.size.width - 60, y: UIScreen.mainScreen().bounds.size.height - 180, width: 40, height: 40),
+			normalIcon: "icon-menu",
+			selectedIcon: "icon-close",
+			buttonsCount: 2,
+			duration: 0.5,
+			distance: 80)
+		button.backgroundColor = UIColor.lightGrayColor()
+		button.delegate = self
+		button.layer.cornerRadius = button.frame.size.width / 2.0
+		view.addSubview(button)
 
 		// view.setNeedsUpdateConstraints() // bootstrap Auto Layout
 	}
 
 	var didSetupConstraints = false
 
-	override func updateViewConstraints() {
-
-		let smallPadding: CGFloat = 20.0
-		let largePadding: CGFloat = 50.0
-
-		if (!didSetupConstraints) {
-			menuBtn.autoPinEdgeToSuperviewEdge(.Trailing, withInset: smallPadding)
-			menuBtn.autoPinEdgeToSuperviewEdge(.Bottom, withInset: largePadding)
-
-			didSetupConstraints = true
-		}
-
-		super.updateViewConstraints()
-	}
+//	override func updateViewConstraints() {
+//
+//		let smallPadding: CGFloat = 20.0
+//		let largePadding: CGFloat = 50.0
+//
+//		if (!didSetupConstraints) {
+//			menuBtn.autoPinEdgeToSuperviewEdge(.Trailing, withInset: smallPadding)
+//			menuBtn.autoPinEdgeToSuperviewEdge(.Bottom, withInset: largePadding)
+//
+//			didSetupConstraints = true
+//		}
+//
+//		super.updateViewConstraints()
+//	}
 
 	override func viewWillAppear(animated: Bool) {
 		super.viewWillAppear(animated)
@@ -317,7 +322,17 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource, Profil
 		print("button will selected: \(atIndex)")
 	}
 
+	/**
+	 点击了菜单按钮
+
+	 - parameter circleMenu:
+	 - parameter button:
+	 - parameter atIndex:
+	 */
 	func circleMenu(circleMenu: CircleMenu, buttonDidSelected button: CircleMenuButton, atIndex: Int) {
-		print("button did selected: \(atIndex)")
+		if atIndex == 0 { // 发起项目
+			let launchProjectViewController = self.storyboard?.instantiateViewControllerWithIdentifier("LaunchProjectViewController") as! LaunchProjectViewController
+			self.navigationController?.pushViewController(launchProjectViewController, animated: true)
+		}
 	}
 }

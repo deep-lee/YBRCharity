@@ -9,11 +9,14 @@
 import UIKit
 import Photos
 import MobileCoreServices
+import SwiftyDrop
+import Alamofire
+import SwiftyJSON
 
 class LaunchProjectViewController: WPEditorViewController {
 
-	var videoPressCache : NSCache = NSCache()
-	var mediaAdded : Dictionary<String, AnyObject> = Dictionary<String, AnyObject>()
+	var videoPressCache: NSCache = NSCache()
+	var mediaAdded: Dictionary<String, AnyObject> = Dictionary<String, AnyObject>()
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -27,6 +30,21 @@ class LaunchProjectViewController: WPEditorViewController {
 		// Dispose of any resources that can be recreated.
 	}
 
+	/**
+	 进入下一个页面填写详细资料
+
+	 - parameter sender:
+	 */
+	@IBAction func next(sender: AnyObject) {
+		if editorView.titleField.html().isEmpty || editorView.contentField.html().isEmpty {
+			Drop.down("请完成项目详情输入", state: DropState.Warning)
+			return
+		}
+
+		// 进入下一个界面
+		let launchProjectSecondViewController = self.storyboard?.instantiateViewControllerWithIdentifier("LaunchProjectSecondViewController") as! LaunchProjectSecondViewController
+		self.navigationController?.pushViewController(launchProjectSecondViewController, animated: true)
+	}
 	/*
 	 // MARK: - Navigation
 
@@ -50,7 +68,7 @@ class LaunchProjectViewController: WPEditorViewController {
 	}
 
 	// 添加资源到编辑器中
-	func addAssetToContent(assertURL : NSURL) {
+	func addAssetToContent(assertURL: NSURL) {
 		let assets = PHAsset.fetchAssetsWithALAssetURLs([assertURL], options: nil)
 		if assets.count < 1 {
 			return
@@ -64,7 +82,7 @@ class LaunchProjectViewController: WPEditorViewController {
 	}
 
 	// 添加视频
-	func addVideoAssetToContent(originalAsset : PHAsset) {
+	func addVideoAssetToContent(originalAsset: PHAsset) {
 		let options = PHImageRequestOptions()
 		options.synchronous = false
 		options.networkAccessAllowed = true
@@ -79,37 +97,79 @@ class LaunchProjectViewController: WPEditorViewController {
 			data?.writeToFile(posterImagePath, atomically: true)
 			dispatch_async(dispatch_get_main_queue(), { () -> Void in
 				self.editorView.insertInProgressVideoWithID(videoID, usingPosterImage: NSURL.fileURLWithPath(posterImagePath).absoluteString)
+
+				// 上传视频
+				let progress = NSProgress(parent: nil, userInfo: [
+					"videoID": videoID,
+					"url": videoPath,
+					"poster": posterImagePath
+				])
+				progress.cancellable = true
+				Alamofire.upload(.POST, AppDelegate.URL_PREFEX + "accept_video.php", data: NSData(contentsOfFile: videoPath)!)
+					.progress { (bytesWritten, totalBytesWritten, totalBytesExpectedToWrite) -> Void in
+						progress.totalUnitCount = totalBytesExpectedToWrite
+						progress.completedUnitCount = totalBytesWritten
+						print(progress.fractionCompleted)
+
+						dispatch_async(dispatch_get_main_queue(), { () -> Void in
+							self.editorView.setProgress(progress.fractionCompleted, onVideo: videoID)
+							self.mediaAdded[videoID] = progress
+						})
+				}
+					.responseJSON { response in
+						print(response)
+						// 返回的不为空
+						if let value = response.result.value {
+							// 解析json
+							let json = JSON(value)
+							let code = json["code"].intValue
+
+							print(json)
+
+							// 获取成功
+							if code == 200 {
+								let data = json["data"].stringValue
+								let url = AppDelegate.URL_PREFEX + data
+								self.editorView.replaceLocalVideoWithID(videoID, forRemoteVideo: url, remotePoster: posterImagePath, videoPress: videoID)
+
+								self.videoPressCache.setObject([
+									"source": url,
+									"poster": posterImagePath
+									], forKey: videoID)
+							}
+						}
+				}
 			})
 
-			let videoOptions = PHVideoRequestOptions()
-			videoOptions.networkAccessAllowed = true
-			PHImageManager.defaultManager().requestExportSessionForVideo(originalAsset, options: videoOptions, exportPreset: AVAssetExportPresetPassthrough, resultHandler: { (exportSession, info) -> Void in
-				exportSession?.outputFileType = kUTTypeQuickTimeMovie as String
-				exportSession?.shouldOptimizeForNetworkUse = true
-				exportSession?.outputURL = NSURL(fileURLWithPath: videoPath)
-				exportSession?.exportAsynchronouslyWithCompletionHandler({ () -> Void in
-					if exportSession?.status != AVAssetExportSessionStatus.Completed {
-						return;
-					}
-					dispatch_async(dispatch_get_main_queue(), { () -> Void in
-						let progress = NSProgress(parent: nil, userInfo: [
-							"videoID" : videoID,
-							"url" : videoPath,
-							"poster" : posterImagePath
-						])
-
-						progress.cancellable = true
-						progress.totalUnitCount = 100
-						NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: "timerFireMethod:", userInfo: progress, repeats: true)
-						self.mediaAdded[videoID] = progress
-					})
-				})
-			})
+//			let videoOptions = PHVideoRequestOptions()
+//			videoOptions.networkAccessAllowed = true
+//			PHImageManager.defaultManager().requestExportSessionForVideo(originalAsset, options: videoOptions, exportPreset: AVAssetExportPresetPassthrough, resultHandler: { (exportSession, info) -> Void in
+//				exportSession?.outputFileType = kUTTypeQuickTimeMovie as String
+//				exportSession?.shouldOptimizeForNetworkUse = true
+//				exportSession?.outputURL = NSURL(fileURLWithPath: videoPath)
+//				exportSession?.exportAsynchronouslyWithCompletionHandler({ () -> Void in
+//					if exportSession?.status != AVAssetExportSessionStatus.Completed {
+//						return;
+//					}
+//					dispatch_async(dispatch_get_main_queue(), { () -> Void in
+//						let progress = NSProgress(parent: nil, userInfo: [
+//							"videoID": videoID,
+//							"url": videoPath,
+//							"poster": posterImagePath
+//						])
+//
+//						progress.cancellable = true
+//						progress.totalUnitCount = 100
+//						NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: "timerFireMethod:", userInfo: progress, repeats: true)
+//						self.mediaAdded[videoID] = progress
+//					})
+//				})
+//			})
 		}
 	}
 
 	// 添加照片
-	func addImageAssetToContent(asset : PHAsset) {
+	func addImageAssetToContent(asset: PHAsset) {
 		let options = PHImageRequestOptions()
 		options.synchronous = false
 		options.networkAccessAllowed = true
@@ -122,22 +182,62 @@ class LaunchProjectViewController: WPEditorViewController {
 			imageData?.writeToFile(path, atomically: true)
 			dispatch_async(dispatch_get_main_queue(), { () -> Void in
 				self.editorView.insertLocalImage(NSURL(fileURLWithPath: path).absoluteString, uniqueId: imageID)
+
+				let image = UIImage(contentsOfFile: path)
+				let progress = NSProgress(parent: nil, userInfo: ["imageID": imageID, "url": path])
+				progress.cancellable = true
+				Alamofire.upload(.POST, AppDelegate.URL_PREFEX + "accept_image.php", data: UIImageJPEGRepresentation(image!, 1)!)
+					.progress { (bytesWritten, totalBytesWritten, totalBytesExpectedToWrite) -> Void in
+
+						progress.totalUnitCount = totalBytesExpectedToWrite
+						progress.completedUnitCount = totalBytesWritten
+
+						print(progress.fractionCompleted)
+
+						dispatch_async(dispatch_get_main_queue(), { () -> Void in
+							self.editorView.setProgress(progress.fractionCompleted, onImage: imageID)
+//							if progress.fractionCompleted >= 1 {
+//								self.editorView.replaceLocalImageWithRemoteImage(NSURL(fileURLWithPath: progress.userInfo["url"] as! String).absoluteString, uniqueId: imageID)
+//							}
+
+							self.mediaAdded[imageID] = progress
+						})
+				}
+					.responseJSON { response in
+						print(response)
+						// 返回的不为空
+						if let value = response.result.value {
+							// 解析json
+							let json = JSON(value)
+							let code = json["code"].intValue
+
+							print(json)
+
+							// 获取成功
+							if code == 200 {
+								let data = json["data"].stringValue
+								let url = AppDelegate.URL_PREFEX + data
+								self.editorView.replaceLocalImageWithRemoteImage(url, uniqueId: imageID)
+							}
+						}
+				}
 			})
 		}
 
-		let progress = NSProgress(parent: nil, userInfo: ["imageID" : imageID, "url" : path])
-		progress.cancellable = true
-		progress.totalUnitCount = 100
-		let timer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: "timerFireMethod:", userInfo: progress, repeats: true)
-
-		progress.cancellationHandler = { () -> Void in
-			timer.invalidate()
-		}
-
-		self.mediaAdded[imageID] = progress
+//		let progress = NSProgress(parent: nil, userInfo: ["imageID": imageID, "url": path])
+//		progress.cancellable = true
+//		progress.totalUnitCount = 100
+//		let timer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: "timerFireMethod:", userInfo: progress, repeats: true)
+//
+//		progress.cancellationHandler = { () -> Void in
+//			timer.invalidate()
+//		}
+//
+//		self.mediaAdded[imageID] = progress
 	}
 
-	func timerFireMethod(timer : NSTimer) {
+	func timerFireMethod(timer: NSTimer) {
+		print("调用了")
 		let progress = timer.userInfo as! NSProgress
 		progress.completedUnitCount++
 		let imageID = progress.userInfo["imageID"] as! String?
@@ -159,8 +259,8 @@ class LaunchProjectViewController: WPEditorViewController {
 				let posterURL = NSURL(fileURLWithPath: progress.userInfo["poster"] as! String).absoluteString
 				self.editorView.replaceLocalVideoWithID(videoID, forRemoteVideo: videoURL, remotePoster: posterURL, videoPress: videoID)
 				self.videoPressCache.setObject([
-					"source" : videoURL,
-					"poster" : posterURL
+					"source": videoURL,
+					"poster": posterURL
 					], forKey: videoID!)
 				timer.invalidate()
 			}
@@ -170,7 +270,7 @@ class LaunchProjectViewController: WPEditorViewController {
 	}
 }
 
-extension LaunchProjectViewController : WPEditorViewControllerDelegate, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+extension LaunchProjectViewController: WPEditorViewControllerDelegate, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
 
 	// 开始编辑
 	func editorDidBeginEditing(editorController: WPEditorViewController!) {
@@ -194,9 +294,10 @@ extension LaunchProjectViewController : WPEditorViewControllerDelegate, UINaviga
 		return true
 	}
 
-	func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : AnyObject]) {
+	func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String: AnyObject]) {
 		self.navigationController?.dismissViewControllerAnimated(true, completion: { () -> Void in
 			let assetURL = info[UIImagePickerControllerReferenceURL] as! NSURL
+			print(assetURL)
 			self.addAssetToContent(assetURL)
 		})
 	}
@@ -216,7 +317,7 @@ extension LaunchProjectViewController : WPEditorViewControllerDelegate, UINaviga
 	}
 
 	// 点击图片
-	func editorViewController(editorViewController: WPEditorViewController!, imageTapped imageId: String!, url: NSURL!, imageMeta : WPImageMeta) {
+	func editorViewController(editorViewController: WPEditorViewController!, imageTapped imageId: String!, url: NSURL!, imageMeta: WPImageMeta) {
 	}
 
 	// 点击视频
