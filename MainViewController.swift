@@ -11,10 +11,21 @@ import TrelloNavigation
 import SwiftyDrop
 import Alamofire
 import SwiftyJSON
+import CircleMenu
+
+extension UIColor {
+	static func color(red: Int, green: Int, blue: Int, alpha: Float) -> UIColor {
+		return UIColor(
+			colorLiteralRed: Float(1.0) / Float(255.0) * Float(red),
+			green: Float(1.0) / Float(255.0) * Float(green),
+			blue: Float(1.0) / Float(255.0) * Float(blue),
+			alpha: alpha)
+	}
+}
 
 class MainViewController: UIViewController {
 
-	var trelloView : TrelloView?
+	var trelloView: TrelloView?
 
 	private let reuseIdentifier = "TrelloListCell"
 
@@ -22,10 +33,22 @@ class MainViewController: UIViewController {
 
 	let ScreenHeight = UIScreen.mainScreen().bounds.size.height
 
-	var profileViewController : ProfileViewController!
+	var profileViewController: ProfileViewController!
 
 	// 登录弹出视图
-	var popup : AFPopupView!
+	var popup: AFPopupView!
+
+	let menuBtn: CircleMenu = {
+		let btn = CircleMenu(frame: CGRectMake(0, 0, 60, 60), normalIcon: "icon-menu", selectedIcon: "icon-close", buttonsCount: 2, duration: 0.5, distance: 120)
+		btn.translatesAutoresizingMaskIntoConstraints = false
+
+		return btn
+	}()
+
+	let items: [(icon: String, color: UIColor)] = [
+		("icon-home", UIColor(red: 0.19, green: 0.57, blue: 1, alpha: 1)),
+		("icon-search", UIColor(red: 0.22, green: 0.74, blue: 0, alpha: 1)),
+	]
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -72,6 +95,27 @@ class MainViewController: UIViewController {
 		self.profileViewController.setBgRGB(0x000000)
 		self.profileViewController.view.frame = self.view.bounds
 		self.profileViewController.delegate = self
+
+		view.addSubview(menuBtn)
+
+		// view.setNeedsUpdateConstraints() // bootstrap Auto Layout
+	}
+
+	var didSetupConstraints = false
+
+	override func updateViewConstraints() {
+
+		let smallPadding: CGFloat = 20.0
+		let largePadding: CGFloat = 50.0
+
+		if (!didSetupConstraints) {
+			menuBtn.autoPinEdgeToSuperviewEdge(.Trailing, withInset: smallPadding)
+			menuBtn.autoPinEdgeToSuperviewEdge(.Bottom, withInset: largePadding)
+
+			didSetupConstraints = true
+		}
+
+		super.updateViewConstraints()
 	}
 
 	override func viewWillAppear(animated: Bool) {
@@ -117,22 +161,22 @@ class MainViewController: UIViewController {
 	}
 
 	// 隐藏
-	func hidePopup(notification : NSNotification) {
+	func hidePopup(notification: NSNotification) {
 		self.popup.hide()
 	}
 
 	// 显示提醒
-	func showTipMessage(notification : NSNotification) {
+	func showTipMessage(notification: NSNotification) {
 		let message = notification.userInfo!["message"] as! String
 		Drop.down(message, state: DropState.Default)
 	}
 
-	func showTipMessageWithString(message : String) {
+	func showTipMessageWithString(message: String) {
 		Drop.down(message, state: DropState.Default)
 	}
 
 	// 发送验证码
-	func sendConfirmCode(notification : NSNotification) {
+	func sendConfirmCode(notification: NSNotification) {
 		let phoneNum = notification.userInfo!["phoneNum"] as! String
 		SMSSDK.getVerificationCodeByMethod(SMSGetCodeMethodSMS, phoneNumber: phoneNum, zone: "86", customIdentifier: nil) { (error) -> Void in
 			if let error = error {
@@ -146,7 +190,7 @@ class MainViewController: UIViewController {
 	}
 
 	// 对验证码进行验证
-	func checkConfirmCode(notification : NSNotification) {
+	func checkConfirmCode(notification: NSNotification) {
 		SVProgressHUD.show()
 		let phoneNum = notification.userInfo!["phoneNum"] as! String
 		let confirmCode = notification.userInfo!["confirmCode"] as! String
@@ -166,14 +210,14 @@ class MainViewController: UIViewController {
 		}
 	}
 
-	func requestLogin(account : String, account_type : Int) {
+	func requestLogin(account: String, account_type: Int) {
 		let paras = [
-			"account" : account,
-			"account_type" : account_type,
-			"nick" : account,
-			"header" : AppDelegate.DEFAULT_HEADER
+			"account": account,
+			"account_type": account_type,
+			"nick": account,
+			"header": AppDelegate.DEFAULT_HEADER
 		]
-		Alamofire.request(.GET, AppDelegate.URL_PREFEX + "login.php", parameters: paras as? [String : AnyObject])
+		Alamofire.request(.GET, AppDelegate.URL_PREFEX + "login.php", parameters: paras as? [String: AnyObject])
 			.responseJSON { response in
 
 				// 返回的不为空
@@ -210,7 +254,7 @@ class MainViewController: UIViewController {
 	}
 }
 
-extension MainViewController : UITableViewDelegate, UITableViewDataSource, ProfileViewControllerDelegate {
+extension MainViewController: UITableViewDelegate, UITableViewDataSource, ProfileViewControllerDelegate, CircleMenuDelegate {
 	func numberOfSectionsInTableView(tableView: UITableView) -> Int {
 		return 1
 	}
@@ -257,5 +301,23 @@ extension MainViewController : UITableViewDelegate, UITableViewDataSource, Profi
 	func recordBtnClicked() {
 		let recordViewController = self.storyboard?.instantiateViewControllerWithIdentifier("RecordViewController") as! RecordViewController
 		self.navigationController?.pushViewController(recordViewController, animated: true)
+	}
+
+	func circleMenu(circleMenu: CircleMenu, willDisplay button: CircleMenuButton, atIndex: Int) {
+		button.backgroundColor = items[atIndex].color
+		button.setImage(UIImage(imageLiteral: items[atIndex].icon), forState: .Normal)
+
+		// set highlited image
+		let highlightedImage = UIImage(imageLiteral: items[atIndex].icon).imageWithRenderingMode(.AlwaysTemplate)
+		button.setImage(highlightedImage, forState: .Highlighted)
+		button.tintColor = UIColor.init(colorLiteralRed: 0, green: 0, blue: 0, alpha: 0.3)
+	}
+
+	func circleMenu(circleMenu: CircleMenu, buttonWillSelected button: CircleMenuButton, atIndex: Int) {
+		print("button will selected: \(atIndex)")
+	}
+
+	func circleMenu(circleMenu: CircleMenu, buttonDidSelected button: CircleMenuButton, atIndex: Int) {
+		print("button did selected: \(atIndex)")
 	}
 }
