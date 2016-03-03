@@ -32,6 +32,10 @@ class LaunchProjectSecondViewController: FormViewController {
 	override func populate(builder: FormBuilder) {
 		builder.navigationTitle = "发起求助"
 		builder.toolbarMode = .Simple
+
+		builder += SectionHeaderTitleFormItem().title("项目封面展示")
+		builder += showImage
+
 		builder += SectionHeaderTitleFormItem().title("受助人资料")
 		builder += userIdentyId
 		builder += realName
@@ -54,6 +58,14 @@ class LaunchProjectSecondViewController: FormViewController {
 		instance.keyboardType = .ASCIICapable
 		instance.autocorrectionType = .No
 		// instance.validate(CountSpecification.exactly(13), message: "请输入13位身份证号")
+		return instance
+	}()
+
+	lazy var showImage: CustomFormItem = {
+		let instance = CustomFormItem()
+		instance.createCell = {
+			return try ImageCell.createCell(self)
+		}
 		return instance
 	}()
 
@@ -134,8 +146,8 @@ class LaunchProjectSecondViewController: FormViewController {
 			"depositary_bank": accountBank.value,
 			"bank_account": accountNum.value
 		]
-        
-        print(paras)
+
+		print(paras)
 
 		// 发起请求
 		Alamofire.request(.GET, AppDelegate.URL_PREFEX + "launch_project.php", parameters: paras)
@@ -164,5 +176,27 @@ class LaunchProjectSecondViewController: FormViewController {
 
 				SVProgressHUD.dismiss()
 		}
+	}
+}
+
+extension LaunchProjectSecondViewController: ImageCellDelegate, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+	/**
+	 进入图片选择界面
+	 */
+	func clickAction() {
+		let picker = UIImagePickerController()
+		picker.sourceType = UIImagePickerControllerSourceType.PhotoLibrary
+		picker.delegate = self
+		picker.allowsEditing = false
+		picker.navigationBar.translucent = false
+		picker.modalPresentationStyle = UIModalPresentationStyle.CurrentContext
+		picker.mediaTypes = UIImagePickerController.availableMediaTypesForSourceType(picker.sourceType)!
+		self.navigationController?.presentViewController(picker, animated: true, completion: nil)
+	}
+
+	func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String: AnyObject]) {
+		self.navigationController?.dismissViewControllerAnimated(true, completion: { () -> Void in
+			// let assetURL = info[UIImagePickerControllerReferenceURL] as! NSURL
+		})
 	}
 }
