@@ -19,8 +19,13 @@
                         <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                         <nil key="highlightedColor"/>
                     </label>
+<<<<<<< HEAD
                     <imageView userInteractionEnabled="NO" tag="1" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Hz4-G4-cqj">
                         <rect key="frame" x="193" y="8" width="84" height="83.5"/>
+=======
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Hz4-G4-cqj">
+                        <rect key="frame" x="180" y="8" width="84" height="83.5"/>
+>>>>>>> origin/master
                         <constraints>
                             <constraint firstAttribute="width" constant="84" id="bVa-WX-iDm"/>
                             <constraint firstAttribute="height" constant="84" id="glT-6S-1oT"/>
@@ -31,7 +36,11 @@
                     <constraint firstItem="Hz4-G4-cqj" firstAttribute="centerY" secondItem="H2p-sc-9uM" secondAttribute="centerY" id="8gu-vd-fwJ"/>
                     <constraint firstItem="WcF-pU-03c" firstAttribute="centerY" secondItem="H2p-sc-9uM" secondAttribute="centerY" id="LRV-VF-vCj"/>
                     <constraint firstItem="WcF-pU-03c" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="20" id="Sfl-xz-aE1"/>
+<<<<<<< HEAD
                     <constraint firstAttribute="trailing" secondItem="Hz4-G4-cqj" secondAttribute="trailing" constant="10" id="cPh-WY-a9k"/>
+=======
+                    <constraint firstAttribute="trailing" secondItem="Hz4-G4-cqj" secondAttribute="trailing" constant="23" id="cPh-WY-a9k"/>
+>>>>>>> origin/master
                 </constraints>
             </tableViewCellContentView>
             <connections>
