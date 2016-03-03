@@ -9,6 +9,8 @@
 import UIKit
 import SwiftyFORM
 import SwiftyDrop
+import Alamofire
+import SwiftyJSON
 
 class LaunchProjectSecondViewController: FormViewController {
 
@@ -75,7 +77,7 @@ class LaunchProjectSecondViewController: FormViewController {
 	lazy var projectType: OptionPickerFormItem = {
 		let instance = OptionPickerFormItem()
 		instance.title("项目类型").placeholder("请选择")
-		instance.append("医疗").append("支教").append("贫困").append("应急")
+		instance.append("医疗", identifier: "0").append("支教", identifier: "1").append("贫困", identifier: "2").append("应急", identifier: "3'")
 		instance.selectOptionWithTitle("医疗")
 		return instance
 	}()
@@ -116,6 +118,51 @@ class LaunchProjectSecondViewController: FormViewController {
 			return
 		}
 
+		SVProgressHUD.show()
+
 		// 请求页面，发起项目
+		let paras: [String: NSObject] = [
+			"launcher_id": DataBaseUtil.getCurrentUserId(),
+			"launch_time": NSDate(),
+			"project_title": self.projectTitle!,
+			"details_page": self.projectDetails!,
+			"recipient_real_id": userIdentyId.value,
+			"recipient_real_name": realName.value,
+			"recipient_address": livePlace.value,
+			"project_type": (projectType.selected?.identifier)!,
+			"amount_for_help": wantedMoneyNum.value,
+			"depositary_bank": accountBank.value,
+			"bank_account": accountNum.value
+		]
+        
+        print(paras)
+
+		// 发起请求
+		Alamofire.request(.GET, AppDelegate.URL_PREFEX + "launch_project.php", parameters: paras)
+			.responseJSON { response in
+
+				// 返回的不为空
+				if let value = response.result.value {
+					// 解析json
+					let json = JSON(value)
+					let code = json["code"].intValue
+
+					print(json)
+
+					// 获取成功
+					if code == 200 {
+						// 发起成功
+						Drop.down("发起项目成功", state: DropState.Success)
+						// 返回到根
+						self.navigationController?.popToRootViewControllerAnimated(true)
+					} else { // 发起失败，数据库问题
+						Drop.down("发起项目失败，请重试", state: DropState.Error)
+					}
+				} else { // 发起失败
+					Drop.down("发起项目失败，请检查网络连接", state: DropState.Error)
+				}
+
+				SVProgressHUD.dismiss()
+		}
 	}
 }

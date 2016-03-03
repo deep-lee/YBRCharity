@@ -102,26 +102,9 @@ class MainViewController: UIViewController {
 		button.delegate = self
 		button.layer.cornerRadius = button.frame.size.width / 2.0
 		view.addSubview(button)
-
-		// view.setNeedsUpdateConstraints() // bootstrap Auto Layout
 	}
 
 	var didSetupConstraints = false
-
-//	override func updateViewConstraints() {
-//
-//		let smallPadding: CGFloat = 20.0
-//		let largePadding: CGFloat = 50.0
-//
-//		if (!didSetupConstraints) {
-//			menuBtn.autoPinEdgeToSuperviewEdge(.Trailing, withInset: smallPadding)
-//			menuBtn.autoPinEdgeToSuperviewEdge(.Bottom, withInset: largePadding)
-//
-//			didSetupConstraints = true
-//		}
-//
-//		super.updateViewConstraints()
-//	}
 
 	override func viewWillAppear(animated: Bool) {
 		super.viewWillAppear(animated)
@@ -252,7 +235,11 @@ class MainViewController: UIViewController {
 						DataBaseUtil.updateLocalUser(user)
 						self.showTipMessageWithString("登录成功")
 						self.popup.hide()
+					} else { // 数据库操作失败
+						Drop.down("登录失败，请重试", state: DropState.Error)
 					}
+				} else {
+					Drop.down("登录失败，请检查网络连接", state: DropState.Error)
 				}
 				SVProgressHUD.dismiss()
 		}
