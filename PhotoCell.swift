@@ -11,27 +11,27 @@ import SwiftyFORM
 
 class PhotoCell: UITableViewCell, CellHeightProvider {
 
-    @IBOutlet var photoNameLabel: UILabel!
-    @IBOutlet var photoImageView: UIImageView!
-    var xibHeight: CGFloat = 103
-    override func awakeFromNib() {
-        super.awakeFromNib()
-        // Initialization code
-        xibHeight = bounds.height
-    }
+	@IBOutlet var photoNameLabel: UILabel!
+	@IBOutlet var photoImageView: UIImageView!
+	var xibHeight: CGFloat = 103
+	override func awakeFromNib() {
+		super.awakeFromNib()
+		// Initialization code
+		xibHeight = bounds.height
+	}
 
-    static func createCell() throws -> PhotoCell {
-        let cell: PhotoCell = try NSBundle.mainBundle().form_loadView("PhotoCell")
-        return cell
-    }
-    
-    override func setSelected(selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
-        
-        // Configure the view for the selected state
-    }
-    
-    func form_cellHeight(indexPath: NSIndexPath, tableView: UITableView) -> CGFloat {
-        return xibHeight
-    }
+	static func createCell() throws -> PhotoCell {
+		let cell: PhotoCell = try NSBundle.mainBundle().form_loadView("PhotoCell")
+		return cell
+	}
+
+	override func setSelected(selected: Bool, animated: Bool) {
+		super.setSelected(selected, animated: animated)
+
+		// Configure the view for the selected state
+	}
+
+	func form_cellHeight(indexPath: NSIndexPath, tableView: UITableView) -> CGFloat {
+		return xibHeight
+	}
 }

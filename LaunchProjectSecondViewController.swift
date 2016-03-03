@@ -17,6 +17,8 @@ class LaunchProjectSecondViewController: FormViewController {
 	var projectTitle: String?
 	var projectDetails: String?
 
+	var coverImage: UIImage!
+
 	override func viewDidLoad() {
 		super.viewDidLoad()
 
@@ -32,6 +34,10 @@ class LaunchProjectSecondViewController: FormViewController {
 	override func populate(builder: FormBuilder) {
 		builder.navigationTitle = "发起求助"
 		builder.toolbarMode = .Simple
+
+		builder += SectionHeaderTitleFormItem().title("项目封面展示")
+		builder += showImage
+
 		builder += SectionHeaderTitleFormItem().title("受助人资料")
 		builder += userIdentyId
 		builder += realName
@@ -54,6 +60,14 @@ class LaunchProjectSecondViewController: FormViewController {
 		instance.keyboardType = .ASCIICapable
 		instance.autocorrectionType = .No
 		// instance.validate(CountSpecification.exactly(13), message: "请输入13位身份证号")
+		return instance
+	}()
+
+	lazy var showImage: CustomFormItem = {
+		let instance = CustomFormItem()
+		instance.createCell = {
+			return try ImageCell.createCell(self)
+		}
 		return instance
 	}()
 
@@ -120,25 +134,8 @@ class LaunchProjectSecondViewController: FormViewController {
 
 		SVProgressHUD.show()
 
-		// 请求页面，发起项目
-		let paras: [String: NSObject] = [
-			"launcher_id": DataBaseUtil.getCurrentUserId(),
-			"launch_time": NSDate(),
-			"project_title": self.projectTitle!,
-			"details_page": self.projectDetails!,
-			"recipient_real_id": userIdentyId.value,
-			"recipient_real_name": realName.value,
-			"recipient_address": livePlace.value,
-			"project_type": (projectType.selected?.identifier)!,
-			"amount_for_help": wantedMoneyNum.value,
-			"depositary_bank": accountBank.value,
-			"bank_account": accountNum.value
-		]
-        
-        print(paras)
-
-		// 发起请求
-		Alamofire.request(.GET, AppDelegate.URL_PREFEX + "launch_project.php", parameters: paras)
+		// 首先上传cover_image
+		Alamofire.upload(.POST, AppDelegate.URL_PREFEX + "accept_cover_image.php", data: UIImageJPEGRepresentation(self.coverImage, 1)!)
 			.responseJSON { response in
 
 				// 返回的不为空
@@ -147,22 +144,86 @@ class LaunchProjectSecondViewController: FormViewController {
 					let json = JSON(value)
 					let code = json["code"].intValue
 
-					print(json)
-
 					// 获取成功
 					if code == 200 {
-						// 发起成功
-						Drop.down("发起项目成功", state: DropState.Success)
-						// 返回到根
-						self.navigationController?.popToRootViewControllerAnimated(true)
-					} else { // 发起失败，数据库问题
-						Drop.down("发起项目失败，请重试", state: DropState.Error)
-					}
-				} else { // 发起失败
-					Drop.down("发起项目失败，请检查网络连接", state: DropState.Error)
-				}
+						let cover_image = AppDelegate.URL_PREFEX + json["data"].stringValue
 
-				SVProgressHUD.dismiss()
+						// 请求页面，发起项目
+						let paras: [String: NSObject] = [
+							"launcher_id": DataBaseUtil.getCurrentUserId(),
+							"launch_time": NSDate(),
+							"project_title": self.projectTitle!,
+							"details_page": self.projectDetails!,
+							"cover_image": cover_image,
+							"recipient_real_id": self.userIdentyId.value,
+							"recipient_real_name": self.realName.value,
+							"recipient_address": self.livePlace.value,
+							"project_type": (self.projectType.selected?.identifier)!,
+							"amount_for_help": self.wantedMoneyNum.value,
+							"depositary_bank": self.accountBank.value,
+							"bank_account": self.accountNum.value
+						]
+
+						// 发起请求
+						Alamofire.request(.GET, AppDelegate.URL_PREFEX + "launch_project.php", parameters: paras)
+							.responseJSON { response in
+
+								// 返回的不为空
+								if let value = response.result.value {
+									// 解析json
+									let json = JSON(value)
+									let code = json["code"].intValue
+
+									print(json)
+
+									// 获取成功
+									if code == 200 {
+										// 发起成功
+										Drop.down("发起项目成功", state: DropState.Success)
+										// 返回到根
+										self.navigationController?.popToRootViewControllerAnimated(true)
+									} else { // 发起失败，数据库问题
+										Drop.down("发起项目失败，请重试", state: DropState.Error)
+									}
+								} else { // 发起失败
+									Drop.down("发起项目失败，请检查网络连接", state: DropState.Error)
+								}
+
+								SVProgressHUD.dismiss()
+						}
+					} else {
+						Drop.down("上传图片失败，请重试", state: DropState.Error)
+						SVProgressHUD.dismiss()
+					}
+				} else {
+					Drop.down("上传图片失败，请检查网络连接", state: DropState.Error)
+					SVProgressHUD.dismiss()
+				}
 		}
+	}
+}
+
+extension LaunchProjectSecondViewController: ImageCellDelegate, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+	/**
+	 进入图片选择界面
+	 */
+	func clickAction() {
+		let picker = UIImagePickerController()
+		picker.sourceType = UIImagePickerControllerSourceType.PhotoLibrary
+		picker.delegate = self
+		picker.allowsEditing = false
+		picker.navigationBar.translucent = false
+		picker.modalPresentationStyle = UIModalPresentationStyle.CurrentContext
+		picker.mediaTypes = UIImagePickerController.availableMediaTypesForSourceType(picker.sourceType)!
+		self.navigationController?.presentViewController(picker, animated: true, completion: nil)
+	}
+
+	func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String: AnyObject]) {
+		self.navigationController?.dismissViewControllerAnimated(true, completion: { () -> Void in
+			let image = info[UIImagePickerControllerOriginalImage] as! UIImage
+			self.coverImage = image
+			let notification = NSNotification(name: "SelectedImage", object: nil, userInfo: ["image": image])
+			NSNotificationCenter.defaultCenter().postNotification(notification)
+		})
 	}
 }

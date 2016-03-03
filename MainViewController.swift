@@ -38,7 +38,7 @@ class MainViewController: UIViewController {
 	// 登录弹出视图
 	var popup: AFPopupView!
 
-	var menuBtn: CircleMenu!
+	var button: CircleMenu!
 
 	let items: [(icon: String, color: UIColor)] = [
 		("icon-home", UIColor(red: 0.19, green: 0.57, blue: 1, alpha: 1)),
@@ -60,13 +60,12 @@ class MainViewController: UIViewController {
 		NSNotificationCenter.defaultCenter().addObserver(self, selector: "showTipMessage:", name: "DropMessage", object: nil)
 
 		view.backgroundColor = TrelloDeepBlue
-		self.trelloView = TrelloView(frame: CGRectMake(0, 0, ScreenWidth, ScreenHeight), tabCount: 5, trelloTabCells: { () -> [UIView] in
+		self.trelloView = TrelloView(frame: CGRectMake(0, 0, ScreenWidth, ScreenHeight), tabCount: 4, trelloTabCells: { () -> [UIView] in
 			return [
-				TrelloListTabViewModel.tabView("BACKLOG", level: 3),
-				TrelloListTabViewModel.tabView("BRIEFS", level: 5),
-				TrelloListTabViewModel.tabView("DESIGN", level: 2),
-				TrelloListTabViewModel.tabView("USER TESTING", level: 4),
-				TrelloListTabViewModel.tabView("USER TESTIN", level: 1)
+				TrelloListTabViewModel.tabView("医疗", level: 3),
+				TrelloListTabViewModel.tabView("支教", level: 4),
+				TrelloListTabViewModel.tabView("贫困", level: 2),
+				TrelloListTabViewModel.tabView("应急", level: 1),
 			]
 		})
 
@@ -91,7 +90,7 @@ class MainViewController: UIViewController {
 		self.profileViewController.view.frame = self.view.bounds
 		self.profileViewController.delegate = self
 
-		let button = CircleMenu(
+		self.button = CircleMenu(
 			frame: CGRect(x: UIScreen.mainScreen().bounds.size.width - 60, y: UIScreen.mainScreen().bounds.size.height - 180, width: 40, height: 40),
 			normalIcon: "icon-menu",
 			selectedIcon: "icon-close",
@@ -139,6 +138,15 @@ class MainViewController: UIViewController {
 			// 动画弹出
 			self.profileViewController.showHideSidebar()
 			self.profileViewController.playShowInAnimation()
+
+			// 是否现实了
+			if self.profileViewController.isSidebarShown {
+				// 执行圆圈菜单显示动画
+				self.hideCircleMenu()
+			} else {
+				self.showCircleMenu()
+			}
+
 			return
 		}
 
@@ -146,6 +154,24 @@ class MainViewController: UIViewController {
 		let loginViewController = self.storyboard?.instantiateViewControllerWithIdentifier("LoginViewController") as! LoginViewController
 		self.popup = AFPopupView.popupWithView(loginViewController.view)
 		self.popup.show()
+	}
+
+	/**
+	 显示圆圈菜单按钮
+	 */
+	func showCircleMenu() {
+		UIView.animateWithDuration(1.0, animations: { () -> Void in
+			self.button.alpha = 1
+			}, completion: nil)
+	}
+
+	/**
+	 隐藏圆圈菜单按钮
+	 */
+	func hideCircleMenu() {
+		UIView.animateWithDuration(1.0, animations: { () -> Void in
+			self.button.alpha = 0
+			}, completion: nil)
 	}
 
 	// 隐藏
