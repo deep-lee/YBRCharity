@@ -8,8 +8,12 @@
 
 import UIKit
 import SwiftyFORM
+import SwiftyDrop
 
 class LaunchProjectSecondViewController: FormViewController {
+
+	var projectTitle: String?
+	var projectDetails: String?
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -42,16 +46,16 @@ class LaunchProjectSecondViewController: FormViewController {
 		builder.alignLeft([accountBank, accountNum])
 	}
 
-	lazy var userIdentyId : TextFieldFormItem = {
+	lazy var userIdentyId: TextFieldFormItem = {
 		let instance = TextFieldFormItem()
 		instance.title("身份证号").placeholder("请输入受助人的身份证号")
 		instance.keyboardType = .ASCIICapable
 		instance.autocorrectionType = .No
-		instance.validate(CountSpecification.exactly(13), message: "请输入13位身份证号")
+		// instance.validate(CountSpecification.exactly(13), message: "请输入13位身份证号")
 		return instance
 	}()
 
-	lazy var realName : TextFieldFormItem = {
+	lazy var realName: TextFieldFormItem = {
 		let instance = TextFieldFormItem()
 		instance.title("真实姓名").placeholder("请输入受助人的真实姓名")
 		instance.keyboardType = .ASCIICapable
@@ -60,7 +64,7 @@ class LaunchProjectSecondViewController: FormViewController {
 		return instance
 	}()
 
-	lazy var livePlace : TextFieldFormItem = {
+	lazy var livePlace: TextFieldFormItem = {
 		let instance = TextFieldFormItem()
 		instance.title("现居地址").placeholder("请输入受助人的现居地址")
 		instance.keyboardType = .ASCIICapable
@@ -68,24 +72,15 @@ class LaunchProjectSecondViewController: FormViewController {
 		return instance
 	}()
 
-	lazy var projectType : ViewControllerFormItem = {
-		let instance = ViewControllerFormItem()
+	lazy var projectType: OptionPickerFormItem = {
+		let instance = OptionPickerFormItem()
 		instance.title("项目类型").placeholder("请选择")
-		instance.createViewController = { (dismissCommand: CommandProtocol) in
-			let vc = SelectProjectTypeViewController(dismissCommand: dismissCommand)
-			return vc
-		}
-		instance.willPopViewController = { (context: ViewControllerFormItemPopContext) in
-			if let x = context.returnedObject as? SwiftyFORM.OptionRowFormItem {
-				context.cell.detailTextLabel?.text = x.title
-			} else {
-				context.cell.detailTextLabel?.text = nil
-			}
-		}
+		instance.append("医疗").append("支教").append("贫困").append("应急")
+		instance.selectOptionWithTitle("医疗")
 		return instance
 	}()
 
-	lazy var wantedMoneyNum : TextFieldFormItem = {
+	lazy var wantedMoneyNum: TextFieldFormItem = {
 		let instance = TextFieldFormItem()
 		instance.title("求助金额").placeholder("元")
 		instance.keyboardType = .NumberPad
@@ -93,7 +88,7 @@ class LaunchProjectSecondViewController: FormViewController {
 		return instance
 	}()
 
-	lazy var accountBank : TextFieldFormItem = {
+	lazy var accountBank: TextFieldFormItem = {
 		let instance = TextFieldFormItem()
 		instance.title("开户银行").placeholder("请输入开户银行")
 		instance.keyboardType = .ASCIICapable
@@ -101,11 +96,11 @@ class LaunchProjectSecondViewController: FormViewController {
 		return instance
 	}()
 
-	lazy var accountNum : TextFieldFormItem = {
+	lazy var accountNum: TextFieldFormItem = {
 		let instance = TextFieldFormItem()
 		instance.title("卡号").placeholder("请输入银行卡号")
 		instance.keyboardType = .NumberPad
-		instance.validate(CountSpecification.exactly(19), message: "请输入19位银行卡号")
+		// instance.validate(CountSpecification.exactly(19), message: "请输入19位银行卡号")
 		instance.autocorrectionType = .No
 		return instance
 	}()
@@ -115,16 +110,12 @@ class LaunchProjectSecondViewController: FormViewController {
 		self.navigationItem.rightBarButtonItem?.tintColor = UIColor(red: 1, green: 1, blue: 1, alpha: 1)
 	}
 
-	func submitAction(sender : AnyObject) {
+	func submitAction(sender: AnyObject) {
+		if userIdentyId.value.isEmpty || realName.value.isEmpty || livePlace.value.isEmpty || wantedMoneyNum.value.isEmpty || accountBank.value.isEmpty || accountNum.value.isEmpty {
+			Drop.down("请将信息填写完成", state: DropState.Warning)
+			return
+		}
+
+		// 请求页面，发起项目
 	}
-
-	/*
-	 // MARK: - Navigation
-
-	 // In a storyboard-based application, you will often want to do a little preparation before navigation
-	 override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-	 // Get the new view controller using segue.destinationViewController.
-	 // Pass the selected object to the new view controller.
-	 }
-	 */
 }

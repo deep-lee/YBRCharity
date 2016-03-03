@@ -42,18 +42,15 @@ class LaunchProjectViewController: WPEditorViewController {
 		}
 
 		// 进入下一个界面
+		// 获取项目title和details
+		let title = self.editorView.title()
+		let details = self.editorView.contentField.html() // 获取的是html
+
 		let launchProjectSecondViewController = self.storyboard?.instantiateViewControllerWithIdentifier("LaunchProjectSecondViewController") as! LaunchProjectSecondViewController
+		launchProjectSecondViewController.projectTitle = title
+		launchProjectSecondViewController.projectDetails = details
 		self.navigationController?.pushViewController(launchProjectSecondViewController, animated: true)
 	}
-	/*
-	 // MARK: - Navigation
-
-	 // In a storyboard-based application, you will often want to do a little preparation before navigation
-	 override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-	 // Get the new view controller using segue.destinationViewController.
-	 // Pass the selected object to the new view controller.
-	 }
-	 */
 
 	// 显示图片选择器
 	func showPhotoPicker() {
