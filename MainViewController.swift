@@ -79,7 +79,7 @@ class MainViewController: UIViewController {
 				guard let tableView = tableView as? TrelloListTableView<TrelloListCellItem> else { return }
 				tableView.registerClass(TrelloListTableViewCell.self, forCellReuseIdentifier: reuseIdentifier)
 				tableView.tab = trelloView.tabs[i]
-				tableView.listItems = TrelloData.data[i]
+				tableView.listItems = [TrelloListCellItem]()
 				i++
 			}
 		}
@@ -101,6 +101,9 @@ class MainViewController: UIViewController {
 		button.delegate = self
 		button.layer.cornerRadius = button.frame.size.width / 2.0
 		view.addSubview(button)
+
+		// 请求项目数据
+		self.initTrelloViewTableViewDataArray()
 	}
 
 	var didSetupConstraints = false
@@ -120,16 +123,6 @@ class MainViewController: UIViewController {
 		super.didReceiveMemoryWarning()
 		// Dispose of any resources that can be recreated.
 	}
-
-	/*
-	 // MARK: - Navigation
-
-	 // In a storyboard-based application, you will often want to do a little preparation before navigation
-	 override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-	 // Get the new view controller using segue.destinationViewController.
-	 // Pass the selected object to the new view controller.
-	 }
-	 */
 
 	@IBAction func showProfileView(sender: AnyObject) {
 
@@ -174,12 +167,12 @@ class MainViewController: UIViewController {
 			}, completion: nil)
 	}
 
-	// 隐藏
+// 隐藏
 	func hidePopup(notification: NSNotification) {
 		self.popup.hide()
 	}
 
-	// 显示提醒
+// 显示提醒
 	func showTipMessage(notification: NSNotification) {
 		let message = notification.userInfo!["message"] as! String
 		Drop.down(message, state: DropState.Default)
@@ -189,7 +182,7 @@ class MainViewController: UIViewController {
 		Drop.down(message, state: DropState.Default)
 	}
 
-	// 发送验证码
+// 发送验证码
 	func sendConfirmCode(notification: NSNotification) {
 		let phoneNum = notification.userInfo!["phoneNum"] as! String
 		SMSSDK.getVerificationCodeByMethod(SMSGetCodeMethodSMS, phoneNumber: phoneNum, zone: "86", customIdentifier: nil) { (error) -> Void in
@@ -203,7 +196,7 @@ class MainViewController: UIViewController {
 		}
 	}
 
-	// 对验证码进行验证
+// 对验证码进行验证
 	func checkConfirmCode(notification: NSNotification) {
 		SVProgressHUD.show()
 		let phoneNum = notification.userInfo!["phoneNum"] as! String
@@ -305,10 +298,27 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource, Profil
 	func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
 		guard let tableView = tableView as? TrelloListTableView<TrelloListCellItem> else { fatalError("TableView False") }
 		guard let item = tableView.listItems?[indexPath.row] else { fatalError("No Data") }
+		print("更新")
 		guard let cell = tableView.dequeueReusableCellWithIdentifier(reuseIdentifier, forIndexPath: indexPath) as? TrelloListTableViewCell else {
 			return TrelloListCellViewModel.initCell(item, reuseIdentifier: reuseIdentifier)
 		}
 		return TrelloListCellViewModel.updateCell(item, cell: cell)
+	}
+
+	// 点击事件
+	func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+		var trelloListItem: TrelloListCellItem?
+		for index in 0 ..< self.trelloView!.tableViews.count {
+			if tableView == self.trelloView!.tableViews[index] {
+				trelloListItem = (tableView as? TrelloListTableView<TrelloListCellItem>)?.listItems![indexPath.row]
+			}
+		}
+
+		// 进入到对应的界面
+		let projectDetailsViewController = self.storyboard?.instantiateViewControllerWithIdentifier("ProjectDetailsViewController") as! ProjectDetailsViewController
+		projectDetailsViewController.projectId = trelloListItem?.projectId
+		self.navigationController?.pushViewController(projectDetailsViewController, animated: true)
+		tableView.deselectRowAtIndexPath(indexPath, animated: true)
 	}
 
 	func profileViewContrllerHeaderTaped() {
@@ -346,6 +356,69 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource, Profil
 		if atIndex == 0 { // 发起项目
 			let launchProjectViewController = self.storyboard?.instantiateViewControllerWithIdentifier("LaunchProjectViewController") as! LaunchProjectViewController
 			self.navigationController?.pushViewController(launchProjectViewController, animated: true)
+		}
+	}
+
+	/**
+	 请求数据，更新tableview的dataarray
+
+	 - returns: 无
+	 */
+	func initTrelloViewTableViewDataArray() {
+		// 发起请求
+		Alamofire.request(.GET, AppDelegate.URL_PREFEX + "query_all_project.php")
+			.responseJSON { response in
+
+				// 返回的不为空
+				if let value = response.result.value {
+					// 解析json
+					let json = JSON(value)
+					let code = json["code"].intValue
+
+					print(json)
+
+					// 获取成功
+					if code == 200 {
+						// 分析数据
+						let data = json["data"].arrayValue
+						for dataItem in data { // 遍历
+							print("李冬")
+							let image = UIImage(data: NSData(contentsOfURL: NSURL(string: dataItem["cover_image"].stringValue)!)!) // 封面照片
+							let content = dataItem["project_title"].stringValue // 项目标题
+							var type: TrelloCellItemType?
+							switch (rand() % 3) {
+							case 0:
+								type = TrelloCellItemType.Green
+							case 1:
+								type = TrelloCellItemType.Orange
+							case 2:
+								type = TrelloCellItemType.Red
+							case 3:
+								type = TrelloCellItemType.Yellow
+							default:
+								break
+							}
+							let projectId = dataItem["id"].intValue
+							let launcherId = dataItem["launcher_id"].intValue
+
+							let projectType = dataItem["project_type"].intValue
+
+							let trelloListItem = TrelloListCellItem(image: image, content: content, type: type!, projectId: projectId, launcherId: launcherId)
+
+							// 加入到数据数组中
+							(self.trelloView?.tableViews[projectType] as? TrelloListTableView<TrelloListCellItem>)?.listItems?.append(trelloListItem)
+						}
+
+						// 刷新TableView
+						for tableview in(self.trelloView?.tableViews)! {
+							tableview.reloadData()
+						}
+					} else { // 数据库操作失败
+						Drop.down("获取数据失败，请重试", state: DropState.Error)
+					}
+				} else { // 网络连接问题
+					Drop.down("获取数据失败，请检查网络连接", state: DropState.Error)
+				}
 		}
 	}
 }

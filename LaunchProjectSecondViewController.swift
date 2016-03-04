@@ -134,30 +134,24 @@ class LaunchProjectSecondViewController: FormViewController {
 
 		SVProgressHUD.show()
 
-<<<<<<< HEAD
+//		Alamofire.upload(.POST, AppDelegate.URL_PREFEX + "accept_cover_image.php", data: UIImageJPEGRepresentation(self.coverImage, 1)!)
+//		// 请求页面，发起项目
+//		let paras: [String: NSObject] = [
+//			"launcher_id": DataBaseUtil.getCurrentUserId(),
+//			"launch_time": NSDate(),
+//			"project_title": self.projectTitle!,
+//			"details_page": self.projectDetails!,
+//			"recipient_real_id": userIdentyId.value,
+//			"recipient_real_name": realName.value,
+//			"recipient_address": livePlace.value,
+//			"project_type": (projectType.selected?.identifier)!,
+//			"amount_for_help": wantedMoneyNum.value,
+//			"depositary_bank": accountBank.value,
+//			"bank_account": accountNum.value
+//		]
+
 		// 首先上传cover_image
 		Alamofire.upload(.POST, AppDelegate.URL_PREFEX + "accept_cover_image.php", data: UIImageJPEGRepresentation(self.coverImage, 1)!)
-=======
-		// 请求页面，发起项目
-		let paras: [String: NSObject] = [
-			"launcher_id": DataBaseUtil.getCurrentUserId(),
-			"launch_time": NSDate(),
-			"project_title": self.projectTitle!,
-			"details_page": self.projectDetails!,
-			"recipient_real_id": userIdentyId.value,
-			"recipient_real_name": realName.value,
-			"recipient_address": livePlace.value,
-			"project_type": (projectType.selected?.identifier)!,
-			"amount_for_help": wantedMoneyNum.value,
-			"depositary_bank": accountBank.value,
-			"bank_account": accountNum.value
-		]
-
-		print(paras)
-
-		// 发起请求
-		Alamofire.request(.GET, AppDelegate.URL_PREFEX + "launch_project.php", parameters: paras)
->>>>>>> origin/master
 			.responseJSON { response in
 
 				// 返回的不为空
@@ -242,14 +236,10 @@ extension LaunchProjectSecondViewController: ImageCellDelegate, UINavigationCont
 
 	func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String: AnyObject]) {
 		self.navigationController?.dismissViewControllerAnimated(true, completion: { () -> Void in
-<<<<<<< HEAD
 			let image = info[UIImagePickerControllerOriginalImage] as! UIImage
 			self.coverImage = image
 			let notification = NSNotification(name: "SelectedImage", object: nil, userInfo: ["image": image])
 			NSNotificationCenter.defaultCenter().postNotification(notification)
-=======
-			// let assetURL = info[UIImagePickerControllerReferenceURL] as! NSURL
->>>>>>> origin/master
 		})
 	}
 }

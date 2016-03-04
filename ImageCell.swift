@@ -23,7 +23,6 @@ class ImageCell: UITableViewCell, CellHeightProvider, SelectRowDelegate {
 		super.awakeFromNib()
 		// Initialization code
 		xibHeight = bounds.height
-<<<<<<< HEAD
 
 		NSNotificationCenter.defaultCenter().addObserver(self, selector: "updateImage:", name: "SelectedImage", object: nil)
 	}
@@ -31,8 +30,6 @@ class ImageCell: UITableViewCell, CellHeightProvider, SelectRowDelegate {
 	func updateImage(notification: NSNotification) {
 		let image = notification.userInfo!["image"] as! UIImage
 		imageview!.image = image
-=======
->>>>>>> origin/master
 	}
 
 	static func createCell(delegate: ImageCellDelegate) throws -> ImageCell {

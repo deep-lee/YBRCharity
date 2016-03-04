@@ -25,10 +25,10 @@
             </objects>
             <point key="canvasLocation" x="-505" y="356"/>
         </scene>
-        <!--Project Details View Controller-->
+        <!--项目详情-->
         <scene sceneID="F0S-Nd-T5X">
             <objects>
-                <viewController id="y7K-lN-s6W" customClass="ProjectDetailsViewController" customModule="YBRCharity" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="ProjectDetailsViewController" id="y7K-lN-s6W" customClass="ProjectDetailsViewController" customModule="YBRCharity" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="d2w-Ae-QOb"/>
                         <viewControllerLayoutGuide type="bottom" id="zKb-iI-lZb"/>
@@ -36,24 +36,44 @@
                     <view key="view" contentMode="scaleToFill" id="x5l-Rx-BOK">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <webView contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="gFd-vg-5g1">
-                                <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
-                                <color key="backgroundColor" red="0.36078431370000003" green="0.38823529410000002" blue="0.4039215686" alpha="1" colorSpace="deviceRGB"/>
-                            </webView>
-                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                        <constraints>
-                            <constraint firstAttribute="trailing" secondItem="gFd-vg-5g1" secondAttribute="trailing" id="EmZ-BV-DBh"/>
-                            <constraint firstItem="zKb-iI-lZb" firstAttribute="top" secondItem="gFd-vg-5g1" secondAttribute="bottom" id="QVm-sv-UFS"/>
-                            <constraint firstItem="gFd-vg-5g1" firstAttribute="top" secondItem="x5l-Rx-BOK" secondAttribute="top" id="oSJ-qw-lkL"/>
-                            <constraint firstItem="gFd-vg-5g1" firstAttribute="leading" secondItem="x5l-Rx-BOK" secondAttribute="leading" id="xTL-w5-V7T"/>
-                        </constraints>
                     </view>
+                    <navigationItem key="navigationItem" title="项目详情" id="Y2f-Ot-Kab">
+                        <barButtonItem key="rightBarButtonItem" title="更多" style="plain" id="eio-bF-aIk">
+                            <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="pVB-ic-DCr">
+                                <rect key="frame" x="544" y="7" width="36" height="30"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <state key="normal" title="更多">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="moreInfoAction:" destination="y7K-lN-s6W" eventType="touchUpInside" id="ISo-N6-1VG"/>
+                                </connections>
+                            </button>
+                        </barButtonItem>
+                    </navigationItem>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="PYr-Wj-O1i" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1041" y="-379"/>
+        </scene>
+        <!--More Info View Controller-->
+        <scene sceneID="xa3-E0-baZ">
+            <objects>
+                <viewController storyboardIdentifier="MoreInfoViewController" id="TMg-3T-CgB" customClass="MoreInfoViewController" customModule="YBRCharity" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="Dzt-YU-wTh"/>
+                        <viewControllerLayoutGuide type="bottom" id="cWk-hr-NqP"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="OkB-wY-ghA">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="vYR-ER-1aH" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1688" y="-379"/>
         </scene>
         <!--发起求助-->
         <scene sceneID="av6-8H-Ix1">
