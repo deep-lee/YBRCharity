@@ -60,12 +60,12 @@ class MoreInfoViewController: FormViewController {
 	}
 
 	func amountForHelp() -> StaticTextFormItem {
-		let string = String(self.project?.amount_for_help!)
+		let string = String(self.project!.amount_for_help!)
 		return StaticTextFormItem().title("求助金融").value(string)
 	}
 
 	func amountHasDonated() -> StaticTextFormItem {
-		let string = String(self.project?.has_donated_amount!)
+		let string = String(self.project!.has_donated_amount!)
 		return StaticTextFormItem().title("已募集金融").value(string)
 	}
 

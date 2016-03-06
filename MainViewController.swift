@@ -12,6 +12,7 @@ import SwiftyDrop
 import Alamofire
 import SwiftyJSON
 import CircleMenu
+import SDWebImage
 
 extension UIColor {
 	static func color(red: Int, green: Int, blue: Int, alpha: Float) -> UIColor {
@@ -300,9 +301,17 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource, Profil
 		guard let item = tableView.listItems?[indexPath.row] else { fatalError("No Data") }
 		print("更新")
 		guard let cell = tableView.dequeueReusableCellWithIdentifier(reuseIdentifier, forIndexPath: indexPath) as? TrelloListTableViewCell else {
-			return TrelloListCellViewModel.initCell(item, reuseIdentifier: reuseIdentifier)
+			let trelloListCell = TrelloListCellViewModel.initCell(item, reuseIdentifier: reuseIdentifier) as! TrelloListTableViewCell
+			trelloListCell.detailImageView.sd_setImageWithURL(NSURL(string: item.cover_image_url!)) { (image, error, type, url) -> Void in
+				trelloListCell.detailImageView.image = image
+			}
+			return trelloListCell
 		}
-		return TrelloListCellViewModel.updateCell(item, cell: cell)
+		let trelloListCell = TrelloListCellViewModel.updateCell(item, cell: cell) as! TrelloListTableViewCell
+		trelloListCell.detailImageView.sd_setImageWithURL(NSURL(string: item.cover_image_url!)) { (image, error, type, url) -> Void in
+			trelloListCell.detailImageView.image = image
+		}
+		return trelloListCell
 	}
 
 	// 点击事件
@@ -383,7 +392,8 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource, Profil
 						let data = json["data"].arrayValue
 						for dataItem in data { // 遍历
 							print("李冬")
-							let image = UIImage(data: NSData(contentsOfURL: NSURL(string: dataItem["cover_image"].stringValue)!)!) // 封面照片
+							// let image = UIImage(data: NSData(contentsOfURL: NSURL(string: dataItem["cover_image"].stringValue)!)!) // 封面照片
+							let gifLoading = UIImage.gifWithName("icon-loading")
 							let content = dataItem["project_title"].stringValue // 项目标题
 							var type: TrelloCellItemType?
 							switch (rand() % 3) {
@@ -403,7 +413,8 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource, Profil
 
 							let projectType = dataItem["project_type"].intValue
 
-							let trelloListItem = TrelloListCellItem(image: image, content: content, type: type!, projectId: projectId, launcherId: launcherId)
+							var trelloListItem = TrelloListCellItem(image: gifLoading, content: content, type: type!, projectId: projectId, launcherId: launcherId)
+							trelloListItem.cover_image_url = dataItem["cover_image"].stringValue
 
 							// 加入到数据数组中
 							(self.trelloView?.tableViews[projectType] as? TrelloListTableView<TrelloListCellItem>)?.listItems?.append(trelloListItem)

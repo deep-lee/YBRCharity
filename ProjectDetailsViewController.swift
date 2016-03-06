@@ -121,6 +121,8 @@ extension ProjectDetailsViewController: WPEditorViewControllerDelegate, UINaviga
 	// 开始编辑
 	func editorDidBeginEditing(editorController: WPEditorViewController!) {
 		print("Editor did begin editing.")
+//		self.editorView.titleField.disableEditing()
+//		self.editorView.contentField.disableEditing()
 	}
 
 	// 结束编辑
